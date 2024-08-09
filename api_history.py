@@ -1,12 +1,25 @@
 import requests
 import time
 from datetime import datetime, timedelta
-
-from typing import List
-from typing import Any
+from typing import List, Any
 from dataclasses import dataclass
 import json
+import telebot
+import threading
 
+# Configuração do bot do Telegram
+CHAVE_API = "7296023269:AAHpuNynWBaNdSJDLtWauRwJhDQMn83eNHU"
+bot = telebot.TeleBot(CHAVE_API)
+
+def verificar(mensagem):
+    return True
+
+@bot.message_handler(func=verificar)
+def responder(mensagem):
+    bot.reply_to(mensagem, "Olá, esse é um teste do bot")
+
+def iniciar_bot():
+    bot.polling()
 
 @dataclass
 class Record:
@@ -22,7 +35,6 @@ class Record:
         _color = str(obj.get("color"))
         _roll = int(obj.get("roll"))
         return Record(_id, _created_at, _color, _roll)
-
 
 @dataclass
 class Root:
@@ -99,6 +111,9 @@ resultado_anterior = []
 minutos_zerados_roll = []  # Nova lista para armazenar valores de roll com minutos zerados
 mensagens_exibidas = set()  # Inicializa a lista para controlar quais mensagens já foram exibidas
 
+# Inicia o bot do Telegram em uma thread separada
+threading.Thread(target=iniciar_bot, daemon=True).start()
+
 while True:
     results, created_at_list = resultados()
 
@@ -129,12 +144,12 @@ while True:
         # Obtém a hora do item mais antigo usando 'created_at'
         if count > 0 and created_at_list:
             # O item mais antigo é o primeiro da lista 'created_at_list'
-            hora_item_mais_antigo_str = created_at_list[99]
+            hora_item_mais_recente_str = created_at_list[0]
             # Converte a string de data/hora em um objeto datetime
-            hora_item_mais_antigo = datetime.fromisoformat(hora_item_mais_antigo_str[:-1])  # Remove o 'Z'
+            hora_item_mais_recente = datetime.fromisoformat(hora_item_mais_recente_str[:-1])  # Remove o 'Z'
             # Subtrai 3 horas
-            hora_item_mais_antigo -= timedelta(hours=3)
-            print(f"Horário atual: {hora_item_mais_antigo.strftime('%H:%M:%S')}")
+            hora_item_mais_recente -= timedelta(hours=3)
+            print(f"Horário mais recente: {hora_item_mais_recente.strftime('%H:%M:%S')}")
 
             # Adiciona os minutos correspondentes aos valores de 'roll'
             agora = datetime.now() - timedelta(hours=3)  # Ajusta para o fuso horário
@@ -150,6 +165,10 @@ while True:
 
         # Imprime o próximo horário zerado
         proximo_zerado = proximo_minuto_zerado()
-        print(f"A próxima casa zerada é ás: {proximo_zerado.strftime('%H:%M')}")
+        mensagem = f"A próxima casa zerada é às: {proximo_zerado.strftime('%H:%M')}"
+        print(mensagem)
+        
+        # Envia a mensagem para o Telegram
+        bot.send_message(chat_id='-1002170394119', text=mensagem)  # Substitua 'seu_chat_id_aqui' pelo ID do seu chat
         
     time.sleep(3)
