@@ -152,4 +152,4 @@ while True:
         proximo_zerado = proximo_minuto_zerado()
         print(f"A próxima casa zerada é ás: {proximo_zerado.strftime('%H:%M')}")
         
-    time.sleep(3)
+    time.sleep(2)
