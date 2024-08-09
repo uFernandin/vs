@@ -1,0 +1,1 @@
+API_CRASH = "https://jonbet.com/api/singleplayer-originals/originals/crash_games/recent/4"
